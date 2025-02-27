@@ -40,7 +40,7 @@ pub fn do_sign(client: &Client, mut headers: HeaderMap, token: String) {
     let response: Value = client
         .post("https://sg-public-api.hoyolab.com/event/luna/hkrpg/os/sign")
         .headers(headers)
-        .json(&json!({"act_id": "e202303301540311", "lang": "zh-tw"}))
+        .json(&json!({"act_id": "e202303301540311", "lang": "zh-cn"}))
         .send()
         .unwrap()
         .json()
