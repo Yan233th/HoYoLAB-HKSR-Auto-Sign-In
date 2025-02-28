@@ -36,7 +36,6 @@ pub fn generate_headers() -> HeaderMap {
 
 pub fn do_sign(client: &Client, mut headers: HeaderMap, token: String) {
     headers.insert(COOKIE, HeaderValue::from_str(&token).unwrap());
-    // println!("{:?}", headers);
     let response: Value = client
         .post("https://sg-public-api.hoyolab.com/event/luna/hkrpg/os/sign")
         .headers(headers)
@@ -45,9 +44,19 @@ pub fn do_sign(client: &Client, mut headers: HeaderMap, token: String) {
         .unwrap()
         .json()
         .unwrap();
-    if response["message"] != "OK" {
-        println!("Sign-in failed for some reason.");
-        println!("{:?}", response);
+    let is_risk = match response.get("data") {
+        Some(data) => {
+            let gt_risk = data.get("gt_result").and_then(|gt| gt.get("is_risk")).and_then(|v| v.as_bool()).unwrap_or(false);
+            let direct_risk = data.get("is_risk").and_then(|v| v.as_bool()).unwrap_or(false);
+            gt_risk || direct_risk
+        }
+        None => false,
+    };
+    if is_risk {
+        eprintln!("The sign-in failed due to triggering risk control.");
+    } else if response["message"] != "OK" {
+        eprintln!("Sign-in failed for some reason.");
+        eprintln!("{:?}", response);
     } else {
         println!("Sign-in completed successfully.");
     }
